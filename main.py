@@ -15,17 +15,18 @@ def get_title(id):
         soup = BeautifulSoup(response.text, features="lxml")
         title = soup.find('h1').text
         title = title.split('::')[0].strip()
-        print(title)
-        print()
+        print('Заголовок:', title)
         # author = soup.find('h1').find('a').text.strip()
         cover_image_href = soup.find('div', class_='bookimage').find('img')['src']
         cover_image_url = urljoin('https://tululu.org/', cover_image_href)
         comments_site = soup.find_all('div', class_='texts')
-        for raw_comment in comments_site:
-            comment = raw_comment.text.split(')')[-1]
-            print(comment)
-        return title, cover_image_url
+        # for raw_comment in comments_site:
+        #     comment = raw_comment.text.split(')')[-1]
+        #     print(comment)
+        genre = soup.find('span', class_='d_book').find_all('a')
+        print([i.text for i in genre], sep =',')
 
+        # return title, cover_image_url
 
 
 
@@ -53,21 +54,18 @@ def download_image(url, filename,  folder='images/'):
             file.write(response.content)
 
 
-for book_id in range(1, 11):
+for book_id in range(1, 10):
     get_title(book_id)
-
-# for book_id in range(1, 10):
-#
+    print()
 #     try:
-#         title, url = get_title(book_id)
+
+        # title, url = get_title(book_id)
 #
 #     except TypeError:
 #         continue
 
-
-
-   # download_image(url, url.split('/')[-1], folder='images/')
-    # download_txt(url, title, folder='books/')
+# download_image(url, url.split('/')[-1], folder='images/')
+# download_txt(url, title, folder='books/')
 
 
 
