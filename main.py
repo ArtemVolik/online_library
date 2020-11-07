@@ -2,34 +2,69 @@ import requests
 import os
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
+import json
+import re
 
 
-def get_title(id):
-    url = f'https://tululu.org/b{id}/'
+def get_books_urls(category_url='https://tululu.org/l55/'):
+    books_urls = []
+    for page in range(1, 11):
+        url = category_url
+        if page > 1:
+            url = f'{url}{page}/'
+        response = requests.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, features='lxml')
+        all_books = soup.find_all('table', class_='d_book')
+        for book in all_books:
+            book = book.find('a')['href']
+            scheme, path = urlparse(category_url)[0:2]
+            books_urls.append(urljoin((f'{scheme}://{path}'), book))
+            if len(books_urls) == 100:
+                return books_urls
+
+
+def get_book_info(book):
+    books_info = []
+    url = book
     response = requests.get(url)
     response.raise_for_status()
-
     if response.url == url:
-
         soup = BeautifulSoup(response.text, features="lxml")
-        title = soup.find('h1').text
-        title = title.split('::')[0].strip()
-        print('Заголовок:', title)
-        # author = soup.find('h1').find('a').text.strip()
-        cover_image_href = soup.find('div', class_='bookimage').find('img')['src']
-        cover_image_url = urljoin('https://tululu.org/', cover_image_href)
-        comments_site = soup.find_all('div', class_='texts')
-        # for raw_comment in comments_site:
-        #     comment = raw_comment.text.split(')')[-1]
-        #     print(comment)
-        genre = soup.find('span', class_='d_book').find_all('a')
-        print([i.text for i in genre], sep =',')
 
-        # return title, cover_image_url
+        book_title = soup.find('h1').text
+        book_title = book_title.split('::')[0].strip()
 
+        book_author = soup.find('h1').find('a').text.strip()
 
+        image_src = soup.find('div', class_='bookimage').find('img')['src']
+        scheme, path = urlparse(url)[0:2]
+        image_url = urljoin(f'{scheme}://{path}', image_src)
+        image_extension = image_src.split('/')[2]
+        image_path = download_image(image_url, image_extension, folder='images/')
 
+        book_comments = soup.find_all('div', class_='texts')
+        book_comments = [comment.find('span').text for comment in book_comments]
+
+        genre_raw = soup.find('span', class_='d_book').find_all('a')
+        genre = [i.text for i in genre_raw]
+
+        book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
+        book_url = urljoin(f'{scheme}://{path}', book_url_href)
+        book_path = download_txt(book_url, book_title, folder='books/')
+
+        books_info.append({
+            'title': book_title,
+            'author': book_author,
+            'image_src': image_path,
+            'book_path': book_path,
+            'comments': book_comments,
+            'genres': genre
+        })
+
+        with open('books_info.json', 'w', encoding='utf8') as file:
+            json.dump(books_info, file, ensure_ascii=False)
 
 
 def download_txt(url, filename, folder='books/'):
@@ -40,33 +75,20 @@ def download_txt(url, filename, folder='books/'):
     if response.url == url:
         with open(filepath, 'wb') as file:
             file.write(response.content)
+            return filepath
 
 
-def download_image(url, filename,  folder='images/'):
+def download_image(url, filename, folder='images/'):
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
     filepath = os.path.join(folder, filename)
-    print(os.path.splitext(filename))
-    print(filepath)
     if response.url == url:
         with open(filepath, 'wb') as file:
             file.write(response.content)
+            return filepath
 
 
-for book_id in range(1, 10):
-    get_title(book_id)
-    print()
-#     try:
-
-        # title, url = get_title(book_id)
-#
-#     except TypeError:
-#         continue
-
-# download_image(url, url.split('/')[-1], folder='images/')
-# download_txt(url, title, folder='books/')
-
-
-
-
+if __name__ == '__main__':
+    for book_url in get_books_urls():
+        get_book_info(book_url)

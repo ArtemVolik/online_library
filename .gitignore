@@ -2,3 +2,7 @@
 .idea
 books
 images
+*.json
+bs4_tutorial.py
+parse_category.py
+parse_tululu_category.py
