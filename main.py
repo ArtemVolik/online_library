@@ -112,6 +112,8 @@ def download_txt(url, filename, folder='books/'):
 
 
 def download_image(url, filename, folder='images/'):
+    if args.skip_images:
+        return
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
