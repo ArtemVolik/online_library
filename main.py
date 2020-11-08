@@ -20,7 +20,7 @@ def get_books_urls(category_url='https://tululu.org/l55/'):
         for book in all_books:
             book = book.find('a')['href']
             scheme, path = urlparse(category_url)[0:2]
-            books_urls.append(urljoin((f'{scheme}://{path}'), book))
+            books_urls.append(urljoin(f'{scheme}://{path}', book))
             if len(books_urls) == 100:
                 return books_urls
 
@@ -50,9 +50,18 @@ def get_book_info(book):
         genre_raw = soup.find('span', class_='d_book').find_all('a')
         genre = [i.text for i in genre_raw]
 
-        book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
-        book_url = urljoin(f'{scheme}://{path}', book_url_href)
-        book_path = download_txt(book_url, book_title, folder='books/')
+        print('перед писком ссылки', url)
+        print(soup.find('table', class_='d_book'))
+        try:
+            book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
+        except BaseException:
+            return
+        print('хреф', book_url_href)
+        book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
+        print('урл', book_txt_download_url)
+
+        book_path = download_txt(book_txt_download_url, book_title, folder='books/')
+
 
         books_info.append({
             'title': book_title,
@@ -90,5 +99,9 @@ def download_image(url, filename, folder='images/'):
 
 
 if __name__ == '__main__':
+    print(len(get_books_urls()))
+    print(get_books_urls())
     for book_url in get_books_urls():
+        print(book_url)
+        print("переходим к поштучному скачиванию")
         get_book_info(book_url)
