@@ -9,7 +9,7 @@ import re
 
 def get_books_urls(category_url='https://tululu.org/l55/'):
     books_urls = []
-    for page in range(1, 11):
+    for page in range(1, 3):
         url = category_url
         if page > 1:
             url = f'{url}{page}/'
@@ -21,7 +21,7 @@ def get_books_urls(category_url='https://tululu.org/l55/'):
             book = book.find('a')['href']
             scheme, path = urlparse(category_url)[0:2]
             books_urls.append(urljoin(f'{scheme}://{path}', book))
-            if len(books_urls) == 100:
+            if len(books_urls) == 35:
                 return books_urls
 
 
@@ -51,8 +51,9 @@ def get_book_info(book):
         book_comments = soup.select(book_comments_selector)
         book_comments = [comment.text for comment in book_comments]
 
-        genre_raw = soup.find('span', class_='d_book').find_all('a')
-        genre = [i.text for i in genre_raw]
+        genres_selector = 'span.d_book a'
+        genres = soup.select(genres_selector)
+        genres = [genre.text for genre in genres]
 
         print('перед писком ссылки', url)
         print(soup.find('table', class_='d_book'))
@@ -73,7 +74,7 @@ def get_book_info(book):
             'image_src': image_path,
             'book_path': book_path,
             'comments': book_comments,
-            'genres': genre
+            'genres': genres
         })
 
         with open('books_info.json', 'w', encoding='utf8') as file:
