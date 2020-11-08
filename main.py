@@ -44,8 +44,7 @@ def get_book_info(book):
     response = requests.get(url)
     response.raise_for_status()
 
-    if args.dest_folder:
-        folder = args.dest_folder
+
 
     if response.url == url:
         soup = BeautifulSoup(response.text, features="lxml")
@@ -131,6 +130,8 @@ def download_image(url, filename, folder='images/'):
 
 if __name__ == '__main__':
     args = parametrs_handler()
+    if args.dest_folder:
+        folder = args.dest_folder
     print(args)
     print(len(get_books_urls()))
     print(get_books_urls())
