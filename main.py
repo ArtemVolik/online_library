@@ -33,7 +33,7 @@ def get_book_info(book):
     if response.url == url:
         soup = BeautifulSoup(response.text, features="lxml")
 
-        book_title = soup.find('h1').text
+        book_title = soup.select_one('h1').text
         book_title = book_title.split('::')[0].strip()
 
         book_author = soup.find('h1').find('a').text.strip()
