@@ -47,8 +47,9 @@ def get_book_info(book):
         image_extension = image_src.split('/')[2]
         image_path = download_image(image_url, image_extension, folder='images/')
 
-        book_comments = soup.find_all('div', class_='texts')
-        book_comments = [comment.find('span').text for comment in book_comments]
+        book_comments_selector = '.texts > .black'
+        book_comments = soup.select(book_comments_selector)
+        book_comments = [comment.text for comment in book_comments]
 
         genre_raw = soup.find('span', class_='d_book').find_all('a')
         genre = [i.text for i in genre_raw]
