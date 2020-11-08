@@ -7,6 +7,7 @@ import json
 import re
 import argparse
 
+
 def parametrs_handler():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
@@ -14,7 +15,7 @@ def parametrs_handler():
     parser.add_argument('--dest_folder', type=str, help='Enter parsed data destination dest_folder')
     parser.add_argument('--skip_images', action='store_true', help='If mentioned images download will be skipped')
     parser.add_argument('--skip_txt', action='store_true', help='If mentioned text files download will be skipped')
-    parser.add_argument('--json_path', type=str, help ='Enter .json file destination')
+    parser.add_argument('--json_path', type=str, help='Enter .json file destination')
     args = parser.parse_args()
     return args
 
@@ -22,7 +23,7 @@ def parametrs_handler():
 def get_books_urls(category_url='https://tululu.org/l55/'):
     start, stop = args.start_page, args.end_page
     books_urls = []
-    for page in range(start, stop+1):
+    for page in range(start, stop + 1):
         url = category_url
         if page > 1:
             url = f'{url}{page}/'
@@ -43,7 +44,6 @@ def get_book_info(book):
     url = book
     response = requests.get(url)
     response.raise_for_status()
-
 
     if response.url == url:
         soup = BeautifulSoup(response.text, features="lxml")
@@ -70,8 +70,6 @@ def get_book_info(book):
         genres = soup.select(genres_selector)
         genres = [genre.text for genre in genres]
 
-        print('перед писком ссылки', url)
-        print(soup.find('table', class_='d_book'))
         # без этой проверки будет ошибка при поиске ссылки на файл для скачивания со страницы книжки, если
         # ссылки на скачивание на странице нет
         try:
@@ -79,30 +77,26 @@ def get_book_info(book):
             book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
             print(url)
         except BaseException:
-            print("Текст книги отсутсвует")
             return
-        print('хреф', book_url_href)
-        book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
-        print('урл', book_txt_download_url)
 
+        book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
-
-        books_info.append({
-            'title': book_title,
-            'author': book_author,
-            'image_src': image_path,
-            'book_path': book_path,
-            'comments': book_comments,
-            'genres': genres
-        })
+        books_info.append(
+            {
+                'title': book_title,
+                'author': book_author,
+                'image_src': image_path,
+                'book_path': book_path,
+                'comments': book_comments,
+                'genres': genres
+            })
 
         with open(json_path, 'w', encoding='utf8') as file:
             json.dump(books_info, file, ensure_ascii=False)
 
 
 def download_txt(url, filename, folder='books/'):
-    print('папка в функции TEXT', folder)
     if args.skip_txt:
         return
     os.makedirs(folder, exist_ok=True)
@@ -116,7 +110,6 @@ def download_txt(url, filename, folder='books/'):
 
 
 def download_image(url, filename, folder='images/'):
-    print('папка в функции', folder)
     if args.skip_images:
         return
     os.makedirs(folder, exist_ok=True)
@@ -130,6 +123,7 @@ def download_image(url, filename, folder='images/'):
 
 
 if __name__ == '__main__':
+
     args = parametrs_handler()
     images_folder = 'images/'
     text_folder = 'books/'
@@ -142,10 +136,6 @@ if __name__ == '__main__':
     if args.dest_folder and not args.json_path:
         json_path = os.path.join(args.dest_folder, json_path)
 
-    print(args)
-    print(len(get_books_urls()))
-    print(get_books_urls())
     books_info = []
     for book_url in get_books_urls():
-        print("переходим к поштучному скачиванию")
         get_book_info(book_url)
