@@ -12,7 +12,7 @@ def parametrs_handler():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
     parser.add_argument('--end_page', default=701, type=int, help='Enter page number to stop')
-    parser.add_argument('--dest_folder', type=str, help='Enter parsed data destination dest_folder')
+    parser.add_argument('--dest_folder', type=str, help='Enter parsed data destination folder')
     parser.add_argument('--skip_images', action='store_true', help='If mentioned images download will be skipped')
     parser.add_argument('--skip_txt', action='store_true', help='If mentioned text files download will be skipped')
     parser.add_argument('--json_path', type=str, help='Enter .json file destination')
@@ -21,6 +21,11 @@ def parametrs_handler():
 
 
 def get_books_urls(category_url='https://tululu.org/l55/'):
+    """
+    get urls from category page
+    :param category_url: category page url
+    :return: list of urls
+    """
     start, stop = args.start_page, args.end_page
     books_urls = []
     for page in range(start, stop + 1):
@@ -41,6 +46,13 @@ def get_books_urls(category_url='https://tululu.org/l55/'):
 
 
 def get_book_info(book):
+    """
+    parse book page and append data info in to the .json file
+    invoke inside download_txt() and download_image() which
+    save image and text version of the book.
+    :param book: url of book page
+    :return: None
+    """
     url = book
     response = requests.get(url)
     response.raise_for_status()
