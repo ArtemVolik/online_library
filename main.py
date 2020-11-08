@@ -5,28 +5,38 @@ from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse
 import json
 import re
+import argparse
+
+def parametrs_handler():
+    parser = argparse.ArgumentParser('Parsing books for own library')
+    parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
+    parser.add_argument('--end_page', default=701, type=int, help='Enter page number to stop')
+    args = parser.parse_args()
+    return args.start_page, args.end_page
 
 
 def get_books_urls(category_url='https://tululu.org/l55/'):
+    start, stop = parametrs_handler()
     books_urls = []
-    for page in range(1, 3):
+    for page in range(start, stop+1):
         url = category_url
         if page > 1:
             url = f'{url}{page}/'
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, features='lxml')
+
+        # не разобрался как селектом заменить
         all_books = soup.find_all('table', class_='d_book')
         for book in all_books:
             book = book.find('a')['href']
             scheme, path = urlparse(category_url)[0:2]
             books_urls.append(urljoin(f'{scheme}://{path}', book))
-            if len(books_urls) == 35:
-                return books_urls
+            # if len(books_urls) == 35:
+        return books_urls
 
 
 def get_book_info(book):
-    books_info = []
     url = book
     response = requests.get(url)
     response.raise_for_status()
@@ -58,8 +68,11 @@ def get_book_info(book):
         print('перед писком ссылки', url)
         print(soup.find('table', class_='d_book'))
         try:
+            # не понял как селектом заменить
             book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
+            print(url)
         except BaseException:
+            print("Текст книги отсутсвует")
             return
         print('хреф', book_url_href)
         book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
@@ -106,7 +119,7 @@ def download_image(url, filename, folder='images/'):
 if __name__ == '__main__':
     print(len(get_books_urls()))
     print(get_books_urls())
+    books_info = []
     for book_url in get_books_urls():
-        print(book_url)
         print("переходим к поштучному скачиванию")
         get_book_info(book_url)
