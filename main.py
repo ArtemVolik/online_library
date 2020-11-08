@@ -11,10 +11,10 @@ def parametrs_handler():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
     parser.add_argument('--end_page', default=701, type=int, help='Enter page number to stop')
-    parser.add_argument('--dest_folder', type=str, default=0, help='Enter parser destination folder')
-    parser.add_argument('--skip_images', action='store_true')
-    parser.add_argument('--skip_txt', action='store_true')
-    parser.add_argument('--json_path', type=str, default=0)
+    parser.add_argument('--dest_folder', type=str, help='Enter parsed data destination folder')
+    parser.add_argument('--skip_images', action='store_true', help='If mentioned images download will be skipped')
+    parser.add_argument('--skip_txt', action='store_true', help='If mentioned text files download will be skipped')
+    parser.add_argument('--json_path', type=str, help ='Enter .json file destination')
     args = parser.parse_args()
     return args
 
@@ -36,7 +36,6 @@ def get_books_urls(category_url='https://tululu.org/l55/'):
             book = book.find('a')['href']
             scheme, path = urlparse(category_url)[0:2]
             books_urls.append(urljoin(f'{scheme}://{path}', book))
-            # if len(books_urls) == 35:
         return books_urls
 
 
@@ -44,6 +43,10 @@ def get_book_info(book):
     url = book
     response = requests.get(url)
     response.raise_for_status()
+
+    if args.dest_folder:
+        folder = args.dest_folder
+
     if response.url == url:
         soup = BeautifulSoup(response.text, features="lxml")
 
@@ -59,7 +62,7 @@ def get_book_info(book):
         scheme, path = urlparse(url)[0:2]
         image_url = urljoin(f'{scheme}://{path}', image_src)
         image_extension = image_src.split('/')[2]
-        image_path = download_image(image_url, image_extension, folder='images/')
+        image_path = download_image(image_url, image_extension, folder)
 
         book_comments_selector = '.texts > .black'
         book_comments = soup.select(book_comments_selector)
@@ -71,6 +74,8 @@ def get_book_info(book):
 
         print('перед писком ссылки', url)
         print(soup.find('table', class_='d_book'))
+        # без этой проверки будет ошибка при поиске ссылки на файл для скачивания со страницы книжки, если
+        # ссылки на скачивание на странице нет
         try:
             # не понял как селектом заменить, подскажите
             book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
@@ -82,7 +87,7 @@ def get_book_info(book):
         book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
         print('урл', book_txt_download_url)
 
-        book_path = download_txt(book_txt_download_url, book_title, folder='books/')
+        book_path = download_txt(book_txt_download_url, book_title, folder)
 
 
         books_info.append({
@@ -126,6 +131,7 @@ def download_image(url, filename, folder='images/'):
 
 if __name__ == '__main__':
     args = parametrs_handler()
+    print(args)
     print(len(get_books_urls()))
     print(get_books_urls())
     books_info = []
