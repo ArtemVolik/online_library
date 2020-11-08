@@ -11,12 +11,16 @@ def parametrs_handler():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
     parser.add_argument('--end_page', default=701, type=int, help='Enter page number to stop')
+    parser.add_argument('--dest_folder', type=str, default=0, help='Enter parser destination folder')
+    parser.add_argument('--skip_images', action='store_true')
+    parser.add_argument('--skip_txt', action='store_true')
+    parser.add_argument('--json_path', type=str, default=0)
     args = parser.parse_args()
-    return args.start_page, args.end_page
+    return args
 
 
 def get_books_urls(category_url='https://tululu.org/l55/'):
-    start, stop = parametrs_handler()
+    start, stop = args.start_page, args.end_page
     books_urls = []
     for page in range(start, stop+1):
         url = category_url
@@ -26,7 +30,7 @@ def get_books_urls(category_url='https://tululu.org/l55/'):
         response.raise_for_status()
         soup = BeautifulSoup(response.content, features='lxml')
 
-        # не разобрался как селектом заменить
+        # не разобрался как селектом заменить, подскажите
         all_books = soup.find_all('table', class_='d_book')
         for book in all_books:
             book = book.find('a')['href']
@@ -68,7 +72,7 @@ def get_book_info(book):
         print('перед писком ссылки', url)
         print(soup.find('table', class_='d_book'))
         try:
-            # не понял как селектом заменить
+            # не понял как селектом заменить, подскажите
             book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
             print(url)
         except BaseException:
@@ -95,6 +99,8 @@ def get_book_info(book):
 
 
 def download_txt(url, filename, folder='books/'):
+    if args.skip_txt:
+        return
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
@@ -117,6 +123,7 @@ def download_image(url, filename, folder='images/'):
 
 
 if __name__ == '__main__':
+    args = parametrs_handler()
     print(len(get_books_urls()))
     print(get_books_urls())
     books_info = []
