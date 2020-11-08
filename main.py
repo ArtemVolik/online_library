@@ -7,14 +7,15 @@ import json
 import re
 import argparse
 
+
 def parametrs_handler():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
     parser.add_argument('--end_page', default=701, type=int, help='Enter page number to stop')
-    parser.add_argument('--dest_folder', type=str, help='Enter parsed data destination folder')
+    parser.add_argument('--dest_folder', type=str, help='Enter parsed data destination dest_folder')
     parser.add_argument('--skip_images', action='store_true', help='If mentioned images download will be skipped')
     parser.add_argument('--skip_txt', action='store_true', help='If mentioned text files download will be skipped')
-    parser.add_argument('--json_path', type=str, help ='Enter .json file destination')
+    parser.add_argument('--json_path', type=str, help='Enter .json file destination')
     args = parser.parse_args()
     return args
 
@@ -22,7 +23,7 @@ def parametrs_handler():
 def get_books_urls(category_url='https://tululu.org/l55/'):
     start, stop = args.start_page, args.end_page
     books_urls = []
-    for page in range(start, stop+1):
+    for page in range(start, stop + 1):
         url = category_url
         if page > 1:
             url = f'{url}{page}/'
@@ -44,8 +45,6 @@ def get_book_info(book):
     response = requests.get(url)
     response.raise_for_status()
 
-
-
     if response.url == url:
         soup = BeautifulSoup(response.text, features="lxml")
 
@@ -61,7 +60,7 @@ def get_book_info(book):
         scheme, path = urlparse(url)[0:2]
         image_url = urljoin(f'{scheme}://{path}', image_src)
         image_extension = image_src.split('/')[2]
-        image_path = download_image(image_url, image_extension, folder)
+        image_path = download_image(image_url, image_extension, dest_folder)
 
         book_comments_selector = '.texts > .black'
         book_comments = soup.select(book_comments_selector)
@@ -86,19 +85,20 @@ def get_book_info(book):
         book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
         print('урл', book_txt_download_url)
 
-        book_path = download_txt(book_txt_download_url, book_title, folder)
+        book_path = download_txt(book_txt_download_url, book_title, dest_folder)
 
-
-        books_info.append({
-            'title': book_title,
-            'author': book_author,
-            'image_src': image_path,
-            'book_path': book_path,
-            'comments': book_comments,
-            'genres': genres
-        })
-
+        books_info.append(
+            {
+                'title': book_title,
+                'author': book_author,
+                'image_src': image_path,
+                'book_path': book_path,
+                'comments': book_comments,
+                'genres': genres
+            }
+        )
         with open('books_info.json', 'w', encoding='utf8') as file:
+        #with open(os.path.join(json_path, 'books_info.json'), 'w', encoding='utf8') as file:
             json.dump(books_info, file, ensure_ascii=False)
 
 
@@ -129,9 +129,13 @@ def download_image(url, filename, folder='images/'):
 
 
 if __name__ == '__main__':
+
     args = parametrs_handler()
     if args.dest_folder:
-        folder = args.dest_folder
+        dest_folder = args.dest_folder
+    # if args.json_path:
+    #     json_path = args.json_path
+
     print(args)
     print(len(get_books_urls()))
     print(get_books_urls())
