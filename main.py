@@ -36,7 +36,8 @@ def get_book_info(book):
         book_title = soup.select_one('h1').text
         book_title = book_title.split('::')[0].strip()
 
-        book_author = soup.find('h1').find('a').text.strip()
+        author_selector = 'h1 a'
+        book_author = soup.select_one(author_selector).text.strip()
 
         image_src = soup.find('div', class_='bookimage').find('img')['src']
         scheme, path = urlparse(url)[0:2]
