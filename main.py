@@ -6,7 +6,7 @@ from urllib.parse import urljoin, urlparse
 import json
 import re
 import argparse
-
+from tqdm import tqdm
 
 def parametrs_handler():
     parser = argparse.ArgumentParser('Parsing books for own library')
@@ -87,7 +87,7 @@ def get_book_info(book):
         try:
             # не понял как селектом заменить, подскажите
             book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
-            print(url)
+            # print(url)
         except BaseException:
             return
 
@@ -149,5 +149,7 @@ if __name__ == '__main__':
         json_path = os.path.join(args.dest_folder, json_path)
 
     books_info = []
-    for book_url in get_books_urls():
+    pbar = tqdm(get_books_urls())
+    print('Parsing book data')
+    for book_url in pbar:
         get_book_info(book_url)
