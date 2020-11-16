@@ -8,7 +8,8 @@ import re
 import argparse
 from tqdm import tqdm
 
-def parametrs_handler():
+
+def get_command_line_parameters():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
     parser.add_argument('--end_page', default=701, type=int, help='Enter page number to stop')
@@ -136,7 +137,7 @@ def download_image(url, filename, folder='images/'):
 
 if __name__ == '__main__':
 
-    args = parametrs_handler()
+    args = get_command_line_parameters()
     images_folder = 'images/'
     text_folder = 'books/'
     json_path = 'books_info.json'
