@@ -20,7 +20,7 @@ pip install -r requirements.txt
 python main.py
 ```
 ### 2. Скрипт можно запустить с опциональными парметрами: 
-***`--start_page`***
+#### ***`--start_page`***
 
 принимает `int` значение - номер страницы с которой начинается парсинг категории. По умолчанию: `= 1`.
 
@@ -29,7 +29,7 @@ python main.py
 python main.py --start_page 50
 ```
 
-***`--end_page`***
+#### ***`--end_page`***
 
 принимает `int` значение - номер страницы окончания парсинга категории. По умолчанию: `=701`. 
       
@@ -39,7 +39,7 @@ python main.py --start_page 50
 python main.py --start_page 50 --end_page 100
 ```
 
-***`--dest_folder`***
+#### ***`--dest_folder`***
 
 принимает `str` путь к папке для сохранения информации. По умолчанию ниформация будет сохранена в папке выполнения 
 программы.
@@ -49,11 +49,11 @@ python main.py --start_page 50 --end_page 100
 ```
 python main.py --start_page 50 --end_page 100 --dest_folder ~/Downloads/
 ```
-***`--skip_images`***
+#### ***`--skip_images`***
 
 если указано картинки не скачиваются.
     
-***`--skip_txt`***
+#### ***`--skip_txt`***
 
 если указано txt файлы не скачиваются.
      
@@ -63,7 +63,7 @@ python main.py --start_page 50 --end_page 100 --dest_folder ~/Downloads/
 python main.py --start_page 50 --end_page 100 --dest_folder ~/Downloads/ --skip_txt
 ```
    
-***`--json_path`***
+#### ***`--json_path`***
 
 принимает `str` путь к папке для сохранения json файла содержащего инфомарцию о книгах. По умолчанию информация будет 
 сохранена в директории выполнения программы.
