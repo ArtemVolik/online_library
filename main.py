@@ -4,10 +4,13 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse
 import json
-import re
 import argparse
 from tqdm import tqdm
 import time
+
+
+class UrlRedirectError(Exception):
+    print("Something wrong with url, website redirecting request URl")
 
 
 def write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres):
@@ -63,6 +66,7 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
         soup = BeautifulSoup(response.content, features='lxml')
 
         # не разобрался как селектом заменить, подскажите
+        # я по весь цикл, или зlесь не нужно?
         all_books = soup.find_all('table', class_='d_book')
         for book in all_books:
             book = book.find('a')['href']
@@ -82,7 +86,7 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     response.raise_for_status()
 
     if not response.url == url:
-        return
+        raise UrlRedirectError
     soup = BeautifulSoup(response.text, features="lxml")
 
     book_title = soup.select_one('h1').text
@@ -127,13 +131,10 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
 def download_txt(url, filename, folder='books/'):
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
-    try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError:
-        return
+    response.raise_for_status()
     filepath = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
     if not response.url == url:
-        return
+        raise UrlRedirectError
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
@@ -142,13 +143,10 @@ def download_txt(url, filename, folder='books/'):
 def download_image(url, filename, folder='images/'):
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
-    try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError:
-        return
+    response.raise_for_status()
     filepath = os.path.join(folder, filename)
     if not response.url == url:
-        return
+        raise UrlRedirectError
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
