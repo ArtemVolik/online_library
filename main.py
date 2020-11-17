@@ -77,7 +77,10 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
         scheme, path = urlparse(url)[0:2]
         image_url = urljoin(f'{scheme}://{path}', image_src)
         image_extension = image_src.split('/')[2]
-        image_path = download_image(image_url, image_extension, skip_image, images_folder)
+
+        image_path = ''
+        if not skip_image:
+            image_path = download_image(image_url, image_extension, images_folder)
 
         book_comments_selector = '.texts > .black'
         book_comments = soup.select(book_comments_selector)
@@ -97,7 +100,9 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
             return
 
         book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
-        book_path = download_txt(book_txt_download_url, book_title, skip_txt, text_folder)
+        book_path = ''
+        if not skip_txt:
+            book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
         books_info.append(
             {
@@ -113,9 +118,7 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
             json.dump(books_info, file, ensure_ascii=False)
 
 
-def download_txt(url, filename, skip_txt, folder='books/'):
-    if skip_txt:
-        return
+def download_txt(url, filename, folder='books/'):
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
@@ -126,9 +129,7 @@ def download_txt(url, filename, skip_txt, folder='books/'):
             return filepath
 
 
-def download_image(url, filename, skip_images, folder='images/'):
-    if skip_images:
-        return
+def download_image(url, filename, folder='images/'):
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
@@ -145,7 +146,6 @@ if __name__ == '__main__':
     images_folder = 'images/'
     text_folder = 'books/'
     json_path = 'books_info.json'
-
 
     if args.json_path:
         json_path = os.path.join(args.json_path, json_path)
