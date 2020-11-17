@@ -22,10 +22,13 @@ def get_command_line_parameters():
 
 
 def get_books_urls(category_url='https://tululu.org/l55/'):
-    """
-    get urls from category page
-    :param category_url: category page url
-    :return: list of urls
+    """Get urls from category page.
+
+    Args:
+    category_url: category page url
+
+    Returns:
+    list: urls list of books in mentioned category
     """
     start, stop = args.start_page, args.end_page
     books_urls = []
@@ -47,12 +50,14 @@ def get_books_urls(category_url='https://tululu.org/l55/'):
 
 
 def get_book_info(book):
-    """
-    parse book page and append data info in to the .json file
-    invoke inside download_txt() and download_image() which
+    """Save book information, text and image.
+
+    Function parse books webpage and save information to json file.
+    Invoke in it's body download_txt() and download_image() which
     save image and text version of the book.
-    :param book: url of book page
-    :return: None
+
+    Args:
+    book: url of book page
     """
     url = book
     response = requests.get(url)
