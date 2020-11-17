@@ -10,6 +10,19 @@ from tqdm import tqdm
 import time
 
 
+def write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres):
+    book_description = {
+        'title': book_title,
+        'author': book_author,
+        'image_src': image_path,
+        'book_path': book_path,
+        'comments': book_comments,
+        'genres': genres
+    }
+    with open(json_path, 'a', encoding='utf8') as file:
+        json.dump(book_description, file, ensure_ascii=False)
+
+
 def get_command_line_parameters():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
@@ -108,17 +121,7 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     if not skip_txt:
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
-    book_description = {
-        'title': book_title,
-        'author': book_author,
-        'image_src': image_path,
-        'book_path': book_path,
-        'comments': book_comments,
-        'genres': genres
-    }
-
-    with open(json_path, 'a', encoding='utf8') as file:
-        json.dump(book_description, file, ensure_ascii=False)
+    write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres)
 
 
 def download_txt(url, filename, folder='books/'):
