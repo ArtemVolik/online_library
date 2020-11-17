@@ -51,17 +51,14 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
     return books_urls
 
 
-def get_book_info(book):
+def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, json_path):
     """Save book information, text and image.
 
     Function parse books webpage and save information to json file.
     Invoke in it's body download_txt() and download_image() which
     save image and text version of the book.
-
-    Args:
-    book: url of book page
     """
-    url = book
+    url = book_url
     response = requests.get(url)
     response.raise_for_status()
 
@@ -80,7 +77,7 @@ def get_book_info(book):
         scheme, path = urlparse(url)[0:2]
         image_url = urljoin(f'{scheme}://{path}', image_src)
         image_extension = image_src.split('/')[2]
-        image_path = download_image(image_url, image_extension, images_folder)
+        image_path = download_image(image_url, image_extension, skip_image, images_folder)
 
         book_comments_selector = '.texts > .black'
         book_comments = soup.select(book_comments_selector)
@@ -100,7 +97,7 @@ def get_book_info(book):
             return
 
         book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
-        book_path = download_txt(book_txt_download_url, book_title, text_folder)
+        book_path = download_txt(book_txt_download_url, book_title, skip_txt, text_folder)
 
         books_info.append(
             {
@@ -116,8 +113,8 @@ def get_book_info(book):
             json.dump(books_info, file, ensure_ascii=False)
 
 
-def download_txt(url, filename, folder='books/'):
-    if args.skip_txt:
+def download_txt(url, filename, skip_txt, folder='books/'):
+    if skip_txt:
         return
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
@@ -129,8 +126,8 @@ def download_txt(url, filename, folder='books/'):
             return filepath
 
 
-def download_image(url, filename, folder='images/'):
-    if args.skip_images:
+def download_image(url, filename, skip_images, folder='images/'):
+    if skip_images:
         return
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
@@ -148,8 +145,7 @@ if __name__ == '__main__':
     images_folder = 'images/'
     text_folder = 'books/'
     json_path = 'books_info.json'
-    start_page = args.start_page
-    end_page = args.end_page
+
 
     if args.json_path:
         json_path = os.path.join(args.json_path, json_path)
@@ -160,7 +156,8 @@ if __name__ == '__main__':
         json_path = os.path.join(args.dest_folder, json_path)
 
     books_info = []
-    pbar = tqdm(get_books_urls(start_page=start_page, end_page=end_page))
+    pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
     print('Parsing book data')
     for book_url in pbar:
-        get_book_info(book_url)
+        get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
+                      text_folder=text_folder, json_path=json_path)
