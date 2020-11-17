@@ -60,7 +60,7 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
 def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, json_path):
     """Save book information, text and image.
 
-    Function parse books webpage and save information to json file.
+    Function parse book webpage and save information to json file.
     Invoke in it's body download_txt() and download_image() which
     save image and text version of the book.
     """
@@ -82,7 +82,6 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     image_src = soup.select_one(image_selector)['src']
     image_url = urljoin(url, image_src)
     image_extension = image_src.split('/')[2]
-
 
     image_path = ''
     if not skip_image:
@@ -109,18 +108,17 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     if not skip_txt:
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
-    books_info.append(
-        {
-            'title': book_title,
-            'author': book_author,
-            'image_src': image_path,
-            'book_path': book_path,
-            'comments': book_comments,
-            'genres': genres
-        })
+    book_description = {
+        'title': book_title,
+        'author': book_author,
+        'image_src': image_path,
+        'book_path': book_path,
+        'comments': book_comments,
+        'genres': genres
+    }
 
-    with open(json_path, 'w', encoding='utf8') as file:
-        json.dump(books_info, file, ensure_ascii=False)
+    with open(json_path, 'a', encoding='utf8') as file:
+        json.dump(book_description, file, ensure_ascii=False)
 
 
 def download_txt(url, filename, folder='books/'):
@@ -158,23 +156,22 @@ if __name__ == '__main__':
     args = get_command_line_parameters()
     images_folder = 'images/'
     text_folder = 'books/'
-    json_path = 'books_info.json'
+    book_json_path = 'books_info.json'
 
     if args.json_path:
-        json_path = os.path.join(args.json_path, json_path)
+        book_json_path = os.path.join(args.json_path, book_json_path)
     if args.dest_folder:
         images_folder = os.path.join(args.dest_folder, images_folder)
         text_folder = os.path.join(args.dest_folder, text_folder)
     if args.dest_folder and not args.json_path:
-        json_path = os.path.join(args.dest_folder, json_path)
+        book_json_path = os.path.join(args.dest_folder, book_json_path)
 
-    books_info = []
     pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
     print('Parsing book data')
     for book_url in pbar:
         try:
             get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
-                          text_folder=text_folder, json_path=json_path)
+                          text_folder=text_folder, json_path=book_json_path)
         except requests.exceptions.HTTPError:
             continue
         except ConnectionError:
