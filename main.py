@@ -45,7 +45,7 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
         except requests.exceptions.HTTPError:
             continue
         except ConnectionError:
-            time.sleep(30)
+            time.sleep(10)
             continue
         soup = BeautifulSoup(response.content, features='lxml')
 
@@ -53,12 +53,12 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
         all_books = soup.find_all('table', class_='d_book')
         for book in all_books:
             book = book.find('a')['href']
-            scheme, path = urlparse(category_url)[0:2]
-            books_urls.append(urljoin(f'{scheme}://{path}', book))
+            books_urls.append(urljoin(url, book))
     return books_urls
 
 
 def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, json_path):
+    pass
     """Save book information, text and image.
 
     Function parse books webpage and save information to json file.
@@ -81,10 +81,9 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
 
     image_selector = ' .bookimage img'
     image_src = soup.select_one(image_selector)['src']
-
-    scheme, path = urlparse(url)[0:2]
-    image_url = urljoin(f'{scheme}://{path}', image_src)
+    image_url = urljoin(url, image_src)
     image_extension = image_src.split('/')[2]
+
 
     image_path = ''
     if not skip_image:
@@ -103,11 +102,10 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     try:
         # не понял как селектом заменить, подскажите
         book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
-            # print(url)
     except BaseException:
         return
 
-    book_txt_download_url = urljoin(f'{scheme}://{path}', book_url_href)
+    book_txt_download_url = urljoin(url, book_url_href)
     book_path = ''
     if not skip_txt:
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
@@ -178,6 +176,8 @@ if __name__ == '__main__':
         try:
             get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
                           text_folder=text_folder, json_path=json_path)
+        except requests.exceptions.HTTPError:
+            continue
         except ConnectionError:
-            time.sleep(30)
+            time.sleep(10)
             continue
