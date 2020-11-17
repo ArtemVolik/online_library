@@ -58,7 +58,6 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
 
 
 def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, json_path):
-    pass
     """Save book information, text and image.
 
     Function parse books webpage and save information to json file.
