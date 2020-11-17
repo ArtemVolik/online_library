@@ -7,10 +7,10 @@ import json
 import argparse
 from tqdm import tqdm
 import time
-
+import sys
 
 class UrlRedirectError(Exception):
-    print("Something wrong with url, website redirecting request URl")
+    print("Website redirect requested URl")
 
 
 def write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres):
@@ -51,14 +51,16 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
     """
 
     books_urls = []
-    for page in range(start_page, end_page + 1):
+    print('Looking for book urls')
+    for page in tqdm(range(start_page, end_page + 1)):
         url = category_url
         if page > 1:
             url = f'{url}{page}/'
         response = requests.get(url)
         try:
             response.raise_for_status()
-        except requests.exceptions.HTTPError:
+        except requests.exceptions.HTTPError as er:
+            print(er)
             continue
         except ConnectionError:
             time.sleep(10)
@@ -173,8 +175,8 @@ if __name__ == '__main__':
         try:
             get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
                           text_folder=text_folder, json_path=book_json_path)
-        except requests.exceptions.HTTPError:
-            continue
+        except requests.exceptions.HTTPError as er:
+            print(er)
         except ConnectionError:
             time.sleep(10)
             continue
