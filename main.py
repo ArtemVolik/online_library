@@ -7,6 +7,7 @@ import json
 import re
 import argparse
 from tqdm import tqdm
+import time
 
 
 def get_command_line_parameters():
@@ -39,7 +40,13 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
         if page > 1:
             url = f'{url}{page}/'
         response = requests.get(url)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError:
+            continue
+        except ConnectionError:
+            time.sleep(30)
+            continue
         soup = BeautifulSoup(response.content, features='lxml')
 
         # не разобрался как селектом заменить, подскажите
@@ -122,7 +129,10 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
 def download_txt(url, filename, folder='books/'):
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
+        return
     filepath = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
     if not response.url == url:
         return
@@ -134,7 +144,10 @@ def download_txt(url, filename, folder='books/'):
 def download_image(url, filename, folder='images/'):
     os.makedirs(folder, exist_ok=True)
     response = requests.get(url)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
+        return
     filepath = os.path.join(folder, filename)
     if not response.url == url:
         return
@@ -162,5 +175,9 @@ if __name__ == '__main__':
     pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
     print('Parsing book data')
     for book_url in pbar:
-        get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
-                      text_folder=text_folder, json_path=json_path)
+        try:
+            get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
+                          text_folder=text_folder, json_path=json_path)
+        except ConnectionError:
+            time.sleep(30)
+            continue
