@@ -9,6 +9,10 @@ import argparse
 from tqdm import tqdm
 
 
+class UrlRedirectException(Exception):
+    pass
+
+
 def get_command_line_parameters():
     parser = argparse.ArgumentParser('Parsing books for own library')
     parser.add_argument('--start_page', default=1, type=int, help="Enter page number to start")
@@ -63,7 +67,7 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     response.raise_for_status()
 
     if not response.url == url:
-        return
+        raise UrlRedirectException('Url we are trying to use is not exists. Might cause Errors in the next operations')
     soup = BeautifulSoup(response.text, features="lxml")
 
     book_title = soup.select_one('h1').text
@@ -125,7 +129,7 @@ def download_txt(url, filename, folder='books/'):
     response.raise_for_status()
     filepath = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
     if not response.url == url:
-        return
+        raise UrlRedirectException('Url we are trying to use is not exists. Might cause Errors in the next operations')
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
@@ -137,7 +141,7 @@ def download_image(url, filename, folder='images/'):
     response.raise_for_status()
     filepath = os.path.join(folder, filename)
     if not response.url == url:
-        return
+        raise UrlRedirectException('Url we are trying to use is not exists. Might cause Errors in the next operations')
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
