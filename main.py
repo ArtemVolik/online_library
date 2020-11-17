@@ -108,17 +108,17 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     genres = soup.select(genres_selector)
     genres = [genre.text for genre in genres]
 
-    # без этой проверки будет ошибка при поиске ссылки на файл для скачивания со страницы книжки, если
-    # ссылки на скачивание на странице нет
-    try:
-        # не понял как селектом заменить, подскажите
-        book_url_href = soup.find('table', class_='d_book').find('a', title=re.compile(r'txt'))['href']
-    except BaseException:
-        return
+    # спасибо за статью про реджексы в ЦСС, когда делал - не нашел.
+    book_link = soup.select_one('table.d_book a[title$=txt]')
 
-    book_txt_download_url = urljoin(url, book_url_href)
-    book_path = ''
-    if not skip_txt:
+    # проверку чуть изменил, так как NoneType is not subscriptable
+    # в любом случае сейчас доходит до конца и записыват ту инфу которая есть.
+    # python main.py --start_page 28 --end_page 30 , на этих страницах нет ссылок на скачивание, для проверки
+    if book_link:
+        book_url_href = book_link['href']
+    book_path = None
+    if not skip_txt and book_link:
+        book_txt_download_url = urljoin(url, book_url_href)
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
     write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres)
