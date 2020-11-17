@@ -21,18 +21,20 @@ def get_command_line_parameters():
     return args
 
 
-def get_books_urls(category_url='https://tululu.org/l55/'):
+def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/'):
     """Get urls from category page.
 
     Args:
+    start_page: number of start page
+    end_page: number of end page
     category_url: category page url
 
     Returns:
     list: urls list of books in mentioned category
     """
-    start, stop = args.start_page, args.end_page
+
     books_urls = []
-    for page in range(start, stop + 1):
+    for page in range(start_page, end_page + 1):
         url = category_url
         if page > 1:
             url = f'{url}{page}/'
@@ -46,7 +48,7 @@ def get_books_urls(category_url='https://tululu.org/l55/'):
             book = book.find('a')['href']
             scheme, path = urlparse(category_url)[0:2]
             books_urls.append(urljoin(f'{scheme}://{path}', book))
-        return books_urls
+    return books_urls
 
 
 def get_book_info(book):
@@ -146,6 +148,9 @@ if __name__ == '__main__':
     images_folder = 'images/'
     text_folder = 'books/'
     json_path = 'books_info.json'
+    start_page = args.start_page
+    end_page = args.end_page
+
     if args.json_path:
         json_path = os.path.join(args.json_path, json_path)
     if args.dest_folder:
@@ -155,7 +160,7 @@ if __name__ == '__main__':
         json_path = os.path.join(args.dest_folder, json_path)
 
     books_info = []
-    pbar = tqdm(get_books_urls())
+    pbar = tqdm(get_books_urls(start_page=start_page, end_page=end_page))
     print('Parsing book data')
     for book_url in pbar:
         get_book_info(book_url)
