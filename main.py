@@ -22,7 +22,7 @@ def is_response_ok(url, response):
         print(url, ' - ', er)
         return
     except UrlRedirectError as er:
-        print(er, url)
+        print(er,' - ', url)
         return
     except ConnectionError as er:
         print('Connection Error')
@@ -90,8 +90,8 @@ def get_book_info(book_url, books_description, skip_image, skip_txt, images_fold
     response = requests.get(url)
     response.raise_for_status()
 
-    if not response.url == url:
-        raise UrlRedirectError
+    if not is_response_ok(url, response):
+        return
     soup = BeautifulSoup(response.text, features="lxml")
 
     book_title = soup.select_one('h1').text
@@ -138,8 +138,8 @@ def download_txt(url, filename, folder='books/'):
     response = requests.get(url)
     response.raise_for_status()
     filepath = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
-    if not response.url == url:
-        raise UrlRedirectError
+    if not is_response_ok(url, response):
+        return
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
@@ -150,8 +150,8 @@ def download_image(url, filename, folder='images/'):
     response = requests.get(url)
     response.raise_for_status()
     filepath = os.path.join(folder, filename)
-    if not response.url == url:
-        raise UrlRedirectError
+    if not is_response_ok(url, response):
+        return
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
@@ -174,17 +174,17 @@ if __name__ == '__main__':
 
     get_books_urls(start_page=args.start_page, end_page=args.end_page)
 
-    # pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
-    # print('Parsing book data')
-    # for book_url in pbar:
-    #     try:
-    #         get_book_info(book_url, books_description, skip_image=args.skip_images, skip_txt=args.skip_txt,
-    #                       images_folder=images_folder, text_folder=text_folder)
-    #     except (requests.exceptions.HTTPError, UrlRedirectError) as er:
-    #         print(er)
-    #         continue
-    #     except ConnectionError as er:
-    #         print(er)
-    #         time.sleep(10)
-    #         continue
-    # write_to_json(book_json_path, books_description)
+    pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
+    print('Parsing book data')
+    for book_url in pbar:
+        try:
+            get_book_info(book_url, books_description, skip_image=args.skip_images, skip_txt=args.skip_txt,
+                          images_folder=images_folder, text_folder=text_folder)
+        except (requests.exceptions.HTTPError, UrlRedirectError) as er:
+            print(er)
+            continue
+        except ConnectionError as er:
+            print(er)
+            time.sleep(10)
+            continue
+    write_to_json(book_json_path, books_description)
