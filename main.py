@@ -3,11 +3,10 @@ import os
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse
-import json
+import js
 import argparse
 from tqdm import tqdm
 import time
-import sys
 
 
 class UrlRedirectError(Exception):
@@ -15,17 +14,9 @@ class UrlRedirectError(Exception):
         return "Website redirect requested URl"
 
 
-def write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres):
-    book_description = {
-        'title': book_title,
-        'author': book_author,
-        'image_src': image_path,
-        'book_path': book_path,
-        'comments': book_comments,
-        'genres': genres
-    }
+def write_to_json(json_path, books_description):
     with open(json_path, 'a', encoding='utf8') as file:
-        json.dump(book_description, file, ensure_ascii=False)
+        js.dump(books_description, file, ensure_ascii=False)
 
 
 def get_command_line_parameters():
@@ -63,14 +54,13 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
             response.raise_for_status()
         except requests.exceptions.HTTPError as er:
             print(er)
+            continue
         except ConnectionError as er:
             print(er)
             time.sleep(10)
-        continue
+            continue
         soup = BeautifulSoup(response.content, features='lxml')
 
-        # не разобрался как селектом заменить, подскажите
-        # я по весь цикл, или зlесь не нужно?
         all_books = soup.find_all('table', class_='d_book')
         for book in all_books:
             book = book.find('a')['href']
@@ -78,10 +68,10 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
     return books_urls
 
 
-def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, json_path):
-    """Save book information, text and image.
+def get_book_info(book_url, books_description, skip_image, skip_txt, images_folder, text_folder):
+    """Return book description, save text and image.
 
-    Function parse book webpage and save information to json file.
+    Function parse book webpage save picture and
     Invoke in it's body download_txt() and download_image() which
     save image and text version of the book.
     """
@@ -117,8 +107,6 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     genres = [genre.text for genre in genres]
 
     book_link = soup.select_one('table.d_book a[title$=txt]')
-
-
     if book_link:
         book_url_href = book_link['href']
     book_path = None
@@ -126,7 +114,12 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
         book_txt_download_url = urljoin(url, book_url_href)
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
-    write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres)
+    books_description.append ({'title': book_title,
+                                 'author': book_author,
+                                 'image_src': image_path,
+                                 'book_path': book_path,
+                                 'comments': book_comments,
+                                 'genres': genres})
 
 
 def download_txt(url, filename, folder='books/'):
@@ -159,7 +152,7 @@ if __name__ == '__main__':
     images_folder = 'images/'
     text_folder = 'books/'
     book_json_path = 'books_info.json'
-
+    books_description = []
     if args.json_path:
         book_json_path = os.path.join(args.json_path, book_json_path)
     if args.dest_folder:
@@ -172,11 +165,15 @@ if __name__ == '__main__':
     print('Parsing book data')
     for book_url in pbar:
         try:
-            get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
-                          text_folder=text_folder, json_path=book_json_path)
+            get_book_info(book_url, books_description, skip_image=args.skip_images, skip_txt=args.skip_txt,
+                          images_folder=images_folder, text_folder=text_folder)
         except (requests.exceptions.HTTPError, UrlRedirectError) as er:
             print(er)
+            continue
         except ConnectionError as er:
             print(er)
             time.sleep(10)
-        continue
+            continue
+    write_to_json(book_json_path, books_description)
+    a = js.loads(book_json_path)
+    print(a)
