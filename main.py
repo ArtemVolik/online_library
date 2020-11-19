@@ -13,6 +13,7 @@ class UrlRedirectError(Exception):
     def __str__(self):
         return "Website redirect requested URl"
 
+
 def is_response_ok(url, response):
     try:
         if url != response.url:
