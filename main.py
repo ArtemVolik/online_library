@@ -9,8 +9,10 @@ from tqdm import tqdm
 import time
 import sys
 
+
 class UrlRedirectError(Exception):
-    print("Website redirect requested URl")
+    def __str__(self):
+        return "Website redirect requested URl"
 
 
 def write_to_json(json_path, book_title, book_author, image_path, book_path, book_comments, genres):
