@@ -116,12 +116,9 @@ def get_book_info(book_url, skip_image, skip_txt, images_folder, text_folder, js
     genres = soup.select(genres_selector)
     genres = [genre.text for genre in genres]
 
-    # спасибо за статью про реджексы в ЦСС, когда делал - не нашел.
     book_link = soup.select_one('table.d_book a[title$=txt]')
 
-    # проверку чуть изменил, так как NoneType is not subscriptable
-    # в любом случае сейчас доходит до конца и записыват ту инфу которая есть.
-    # python main.py --start_page 28 --end_page 30 , на этих страницах нет ссылок на скачивание, для проверки
+
     if book_link:
         book_url_href = book_link['href']
     book_path = None
