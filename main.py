@@ -63,10 +63,10 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
             response.raise_for_status()
         except requests.exceptions.HTTPError as er:
             print(er)
-            continue
-        except ConnectionError:
+        except ConnectionError as er:
+            print(er)
             time.sleep(10)
-            continue
+        continue
         soup = BeautifulSoup(response.content, features='lxml')
 
         # не разобрался как селектом заменить, подскажите
@@ -177,10 +177,9 @@ if __name__ == '__main__':
         try:
             get_book_info(book_url, skip_image=args.skip_images, skip_txt=args.skip_txt, images_folder=images_folder,
                           text_folder=text_folder, json_path=book_json_path)
-        except requests.exceptions.HTTPError as er:
+        except (requests.exceptions.HTTPError, UrlRedirectError) as er:
             print(er)
-        except UrlRedirectError:
+        except ConnectionError as er:
             print(er)
-        except ConnectionError:
             time.sleep(10)
         continue
