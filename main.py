@@ -177,6 +177,8 @@ if __name__ == '__main__':
                           text_folder=text_folder, json_path=book_json_path)
         except requests.exceptions.HTTPError as er:
             print(er)
+        except UrlRedirectError:
+            print(er)
         except ConnectionError:
             time.sleep(10)
-            continue
+        continue
