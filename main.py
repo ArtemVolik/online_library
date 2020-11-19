@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin
 import argparse
+import json
 from tqdm import tqdm
 import time
 
@@ -12,10 +13,28 @@ class UrlRedirectError(Exception):
     def __str__(self):
         return "Website redirect requested URl"
 
+def is_response_ok(url, response):
+    try:
+        if url != response.url:
+            raise UrlRedirectError
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as er:
+        print(url, ' - ', er)
+        return
+    except UrlRedirectError as er:
+        print(er, url)
+        return
+    except ConnectionError as er:
+        print('Connection Error')
+        time.sleep(10)
+        return
+    return True
+
+
 
 def write_to_json(json_path, books_description):
     with open(json_path, 'a', encoding='utf8') as file:
-        js.dump(books_description, file, ensure_ascii=False)
+        json.dump(books_description, file, ensure_ascii=False)
 
 
 def get_command_line_parameters():
@@ -49,14 +68,7 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
         if page > 1:
             url = f'{url}{page}/'
         response = requests.get(url)
-        try:
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as er:
-            print(er)
-            continue
-        except ConnectionError as er:
-            print(er)
-            time.sleep(10)
+        if not is_response_ok(url, response):
             continue
         soup = BeautifulSoup(response.content, features='lxml')
 
@@ -160,17 +172,19 @@ if __name__ == '__main__':
     if args.dest_folder and not args.json_path:
         book_json_path = os.path.join(args.dest_folder, book_json_path)
 
-    pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
-    print('Parsing book data')
-    for book_url in pbar:
-        try:
-            get_book_info(book_url, books_description, skip_image=args.skip_images, skip_txt=args.skip_txt,
-                          images_folder=images_folder, text_folder=text_folder)
-        except (requests.exceptions.HTTPError, UrlRedirectError) as er:
-            print(er)
-            continue
-        except ConnectionError as er:
-            print(er)
-            time.sleep(10)
-            continue
-    write_to_json(book_json_path, books_description)
+    get_books_urls(start_page=args.start_page, end_page=args.end_page)
+
+    # pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
+    # print('Parsing book data')
+    # for book_url in pbar:
+    #     try:
+    #         get_book_info(book_url, books_description, skip_image=args.skip_images, skip_txt=args.skip_txt,
+    #                       images_folder=images_folder, text_folder=text_folder)
+    #     except (requests.exceptions.HTTPError, UrlRedirectError) as er:
+    #         print(er)
+    #         continue
+    #     except ConnectionError as er:
+    #         print(er)
+    #         time.sleep(10)
+    #         continue
+    # write_to_json(book_json_path, books_description)
