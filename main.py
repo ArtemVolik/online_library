@@ -2,8 +2,7 @@ import requests
 import os
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
-from urllib.parse import urljoin, urlparse
-import js
+from urllib.parse import urljoin
 import argparse
 from tqdm import tqdm
 import time
@@ -175,5 +174,3 @@ if __name__ == '__main__':
             time.sleep(10)
             continue
     write_to_json(book_json_path, books_description)
-    a = js.loads(book_json_path)
-    print(a)
