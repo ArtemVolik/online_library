@@ -126,7 +126,7 @@ def get_book_info(book_url, books_description, skip_image, skip_txt, images_fold
         book_txt_download_url = urljoin(url, book_url_href)
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
-    books_description.append ({'title': book_title,
+    books_description.append({'title': book_title,
                                  'author': book_author,
                                  'image_src': image_path,
                                  'book_path': book_path,
