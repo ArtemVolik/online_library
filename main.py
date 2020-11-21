@@ -175,11 +175,11 @@ if __name__ == '__main__':
     if args.dest_folder and not args.json_path:
         book_json_path = os.path.join(args.dest_folder, book_json_path)
 
-    get_books_urls(start_page=args.start_page, end_page=args.end_page)
 
-    pbar = tqdm(get_books_urls(start_page=args.start_page, end_page=args.end_page))
+    pbar = get_books_urls(start_page=args.start_page, end_page=args.end_page)
+
     print('Parsing book data')
-    for book_url in pbar:
+    for book_url in tqdm(pbar):
         try:
             get_book_info(book_url, books_description, skip_image=args.skip_images, skip_txt=args.skip_txt,
                           images_folder=images_folder, text_folder=text_folder)
