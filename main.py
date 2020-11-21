@@ -18,18 +18,24 @@ def response_check(url, response):
     if url != response.url:
         raise UrlRedirectError
     response.raise_for_status()
-    # except requests.exceptions.HTTPError as er:
-    #     print(url, ' - ', er)
-    #     return
-    # except UrlRedirectError as er:
-    #     print(er,' - ', url)
-    #     return
-    # except ConnectionError as er:
-    #     print('Connection Error')
-    #     time.sleep(10)
-    #     return
-    # return True
 
+
+def is_response_ok(url, response):
+    try:
+        if url != response.url:
+            raise UrlRedirectError
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as er:
+        print(url, ' - ', er)
+        return
+    except UrlRedirectError as er:
+        print(er, ' - ', url)
+        return
+    except ConnectionError as er:
+        print('Connection Error')
+        time.sleep(10)
+        return
+    return True
 
 
 def write_to_json(json_path, books_description):
@@ -71,7 +77,6 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
         if not is_response_ok(url, response):
             continue
         soup = BeautifulSoup(response.content, features='lxml')
-
         all_books = soup.find_all('table', class_='d_book')
         for book in all_books:
             book = book.find('a')['href']
@@ -126,11 +131,11 @@ def get_book_info(book_url, books_description, skip_image, skip_txt, images_fold
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
     books_description.append({'title': book_title,
-                                 'author': book_author,
-                                 'image_src': image_path,
-                                 'book_path': book_path,
-                                 'comments': book_comments,
-                                 'genres': genres})
+                              'author': book_author,
+                              'image_src': image_path,
+                              'book_path': book_path,
+                              'comments': book_comments,
+                              'genres': genres})
 
 
 def download_txt(url, filename, folder='books/'):
