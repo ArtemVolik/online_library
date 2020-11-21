@@ -14,22 +14,21 @@ class UrlRedirectError(Exception):
         return "Website redirect requested URl"
 
 
-def is_response_ok(url, response):
-    try:
-        if url != response.url:
-            raise UrlRedirectError
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as er:
-        print(url, ' - ', er)
-        return
-    except UrlRedirectError as er:
-        print(er,' - ', url)
-        return
-    except ConnectionError as er:
-        print('Connection Error')
-        time.sleep(10)
-        return
-    return True
+def response_check(url, response):
+    if url != response.url:
+        raise UrlRedirectError
+    response.raise_for_status()
+    # except requests.exceptions.HTTPError as er:
+    #     print(url, ' - ', er)
+    #     return
+    # except UrlRedirectError as er:
+    #     print(er,' - ', url)
+    #     return
+    # except ConnectionError as er:
+    #     print('Connection Error')
+    #     time.sleep(10)
+    #     return
+    # return True
 
 
 
@@ -139,8 +138,7 @@ def download_txt(url, filename, folder='books/'):
     response = requests.get(url)
     response.raise_for_status()
     filepath = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
-    if not is_response_ok(url, response):
-        return
+    response_check(url, response)
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
@@ -151,8 +149,7 @@ def download_image(url, filename, folder='images/'):
     response = requests.get(url)
     response.raise_for_status()
     filepath = os.path.join(folder, filename)
-    if not is_response_ok(url, response):
-        return
+    response_check(url, response)
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
