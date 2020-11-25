@@ -14,24 +14,26 @@ class UrlRedirectError(Exception):
         return "Website redirect requested URl"
 
 
-def response_check(url, response):
+def check_response(url, response):
     if url != response.url:
         raise UrlRedirectError
     response.raise_for_status()
 
 
-def is_response_ok(url, response):
+def handling_response_exception(url, response):
+    '''Check response and handling exceptions
+
+     Returns True if no exceptions occurred.
+     '''
     try:
-        if url != response.url:
-            raise UrlRedirectError
-        response.raise_for_status()
+        check_response(url, response)
     except requests.exceptions.HTTPError as er:
         print(url, ' - ', er)
         return
     except UrlRedirectError as er:
         print(er, ' - ', url)
         return
-    except ConnectionError as er:
+    except ConnectionError:
         print('Connection Error')
         time.sleep(10)
         return
@@ -74,7 +76,7 @@ def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/')
         if page > 1:
             url = f'{url}{page}/'
         response = requests.get(url)
-        if not is_response_ok(url, response):
+        if not handling_response_exception(url, response):
             continue
         soup = BeautifulSoup(response.content, features='lxml')
         all_books = soup.find_all('table', class_='d_book')
@@ -95,8 +97,7 @@ def get_book_info(book_url, books_description, skip_image, skip_txt, images_fold
     response = requests.get(url)
     response.raise_for_status()
 
-    if not is_response_ok(url, response):
-        return
+    check_response(url, response)
     soup = BeautifulSoup(response.text, features="lxml")
 
     book_title = soup.select_one('h1').text
@@ -143,7 +144,7 @@ def download_txt(url, filename, folder='books/'):
     response = requests.get(url)
     response.raise_for_status()
     filepath = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
-    response_check(url, response)
+    check_response(url, response)
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
@@ -154,7 +155,7 @@ def download_image(url, filename, folder='images/'):
     response = requests.get(url)
     response.raise_for_status()
     filepath = os.path.join(folder, filename)
-    response_check(url, response)
+    check_response(url, response)
     with open(filepath, 'wb') as file:
         file.write(response.content)
         return filepath
