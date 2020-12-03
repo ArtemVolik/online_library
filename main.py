@@ -11,33 +11,13 @@ import time
 
 class UrlRedirectError(Exception):
     def __str__(self):
-        return "Website redirect requested URl"
+        return "Website redirects requested URl"
 
 
 def check_response(url, response):
     if url != response.url:
         raise UrlRedirectError
     response.raise_for_status()
-
-
-def handling_response_exception(url, response):
-    '''Check response and handling exceptions
-
-     Returns True if no exceptions occurred.
-     '''
-    try:
-        check_response(url, response)
-    except requests.exceptions.HTTPError as er:
-        print(url, ' - ', er)
-        return
-    except UrlRedirectError as er:
-        print(er, ' - ', url)
-        return
-    except ConnectionError:
-        print('Connection Error')
-        time.sleep(10)
-        return
-    return True
 
 
 def write_to_json(json_path, books_description):
@@ -57,33 +37,22 @@ def get_command_line_parameters():
     return args
 
 
-def get_books_urls(start_page, end_page, category_url='https://tululu.org/l55/'):
-    """Get urls from category page.
+def make_category_page_url(page, category_url):
+    url = category_url
+    if page > 1:
+        url = f'{url}{page}/'
+    return url
 
-    Args:
-    start_page: number of start page
-    end_page: number of end page
-    category_url: category page url
 
-    Returns:
-    list: urls list of books in mentioned category
-    """
-
-    books_urls = []
-    print('Looking for book urls')
-    for page in tqdm(range(start_page, end_page + 1)):
-        url = category_url
-        if page > 1:
-            url = f'{url}{page}/'
-        response = requests.get(url)
-        if not handling_response_exception(url, response):
-            continue
-        soup = BeautifulSoup(response.content, features='lxml')
-        all_books = soup.find_all('table', class_='d_book')
-        for book in all_books:
-            book = book.find('a')['href']
-            books_urls.append(urljoin(url, book))
-    return books_urls
+def get_books_from_category_page(url, books_urls):
+    """Finds URLS and appends them to list."""
+    response = requests.get(url)
+    check_response(url, response)
+    soup = BeautifulSoup(response.content, features='lxml')
+    all_books = soup.find_all('table', class_='d_book')
+    for book in all_books:
+        book = book.find('a')['href']
+        books_urls.append(urljoin(url, book))
 
 
 def get_book_info(book_url, books_description, skip_image, skip_txt, images_folder, text_folder):
@@ -124,10 +93,11 @@ def get_book_info(book_url, books_description, skip_image, skip_txt, images_fold
     genres = [genre.text for genre in genres]
 
     book_link = soup.select_one('table.d_book a[title$=txt]')
-    if book_link:
-        book_url_href = book_link['href']
-    book_path = None
-    if not skip_txt and book_link:
+
+    if not book_link:
+        return
+    book_url_href = book_link['href']
+    if not skip_txt:
         book_txt_download_url = urljoin(url, book_url_href)
         book_path = download_txt(book_txt_download_url, book_title, text_folder)
 
@@ -167,7 +137,9 @@ if __name__ == '__main__':
     images_folder = 'images/'
     text_folder = 'books/'
     book_json_path = 'books_info.json'
+    category_url = 'https://tululu.org/l55/'
     books_description = []
+    books_urls = []
     if args.json_path:
         book_json_path = os.path.join(args.json_path, book_json_path)
     if args.dest_folder:
@@ -175,12 +147,26 @@ if __name__ == '__main__':
         text_folder = os.path.join(args.dest_folder, text_folder)
     if args.dest_folder and not args.json_path:
         book_json_path = os.path.join(args.dest_folder, book_json_path)
+    start_page = args.start_page
+    end_page = args.end_page
 
 
-    pbar = get_books_urls(start_page=args.start_page, end_page=args.end_page)
+    print("Parsing books urls")
+    for page in tqdm(range(start_page, end_page+1)):
+        try:
+            page_url = make_category_page_url(page, category_url)
+            get_books_from_category_page(page_url, books_urls)
+        except (requests.exceptions.HTTPError, UrlRedirectError) as er:
+            print(er)
+            continue
+        except ConnectionError as er:
+            print(er)
+            time.sleep(10)
+            continue
+
 
     print('Parsing book data')
-    for book_url in tqdm(pbar):
+    for book_url in tqdm(books_urls):
         try:
             get_book_info(book_url, books_description, skip_image=args.skip_images, skip_txt=args.skip_txt,
                           images_folder=images_folder, text_folder=text_folder)
